@@ -48,7 +48,8 @@ typedef UNALIGNED FVITEMID *PFVITEMID;
 typedef const UNALIGNED FVITEMID *PCFVITEMID;
 
 class CFolderViewImplFolder : public IShellFolder2,
-                              public IPersistFolder2
+                              public IPersistFolder2,
+                                public IExplorerPaneVisibility
 {
 public:
     CFolderViewImplFolder(UINT nLevel);
@@ -89,7 +90,16 @@ public:
 
     // IPersistFolder2
     IFACEMETHODIMP GetCurFolder(PIDLIST_ABSOLUTE *ppidl);
-
+    // IExplorerPaneVisibility
+    IFACEMETHODIMP GetPaneState(_In_ REFEXPLORERPANE ep, _Out_ EXPLORERPANESTATE* peps)
+    {
+        *peps = EPS_DEFAULT_ON;
+        if (ep == EP_DetailsPane)
+        {
+            *peps = EPS_FORCE;
+        }
+        return S_OK;
+    }
     // IDList constructor public for the enumerator object
     HRESULT CreateChildID(PCWSTR pszName, int nLevel, int nSize, int nSides, BOOL fIsFolder, PITEMID_CHILD *ppidl);
 
@@ -191,6 +201,7 @@ HRESULT CFolderViewImplFolder::QueryInterface(REFIID riid, void **ppv)
         QITABENT(CFolderViewImplFolder, IPersist),
         QITABENT(CFolderViewImplFolder, IPersistFolder),
         QITABENT(CFolderViewImplFolder, IPersistFolder2),
+        QITABENT(CFolderViewImplFolder, IExplorerPaneVisibility),
         { 0 },
     };
     return QISearch(this, qit, riid, ppv);

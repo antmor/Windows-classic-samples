@@ -25,16 +25,17 @@
 
 const COMDLG_FILTERSPEC c_rgSaveTypes[] =
 {
-    {L"Word Document (*.doc)",       L"*.doc"},
+    {L"JPEG ",                      L"*.jpg;*.jpeg;"},
+    {L"Word Document (*.doc)",       L"*.doc;*.docx"},
     {L"Web Page (*.htm; *.html)",    L"*.htm;*.html"},
     {L"Text Document (*.txt)",       L"*.txt"},
     {L"All Documents (*.*)",         L"*.*"}
 };
 
 // Indices of file types
-#define INDEX_WORDDOC 1
-#define INDEX_WEBPAGE 2
-#define INDEX_TEXTDOC 3
+#define INDEX_WORDDOC 2
+#define INDEX_WEBPAGE 3
+#define INDEX_TEXTDOC 4
 
 // Controls
 #define CONTROL_GROUP           2000
@@ -121,9 +122,10 @@ HRESULT CDialogEventHandler::OnTypeChange(IFileDialog *pfd)
 
             switch (uIndex)
             {
+            case 0: //[[fallthrough]]
             case INDEX_WORDDOC:
                 // When .doc is selected, let's ask for some arbitrary property, say Title.
-                hr = PSGetPropertyDescriptionListFromString(L"prop:System.Title", IID_PPV_ARGS(&pdl));
+                hr = PSGetPropertyDescriptionListFromString(L"prop:System.Title;System.Author;System.Keywords;System.Rating;System.Size;System.Category", IID_PPV_ARGS(&pdl));
                 if (SUCCEEDED(hr))
                 {
                     // FALSE as second param == do not show default properties.
@@ -506,6 +508,42 @@ HRESULT AddCustomControls()
                                         hr = pfdc->SetSelectedControlItem(CONTROL_RADIOBUTTONLIST,
                                                                           CONTROL_RADIOBUTTON1);
                                     }
+
+                                    pfdc->AddCheckButton(11, L"AddCheckButton", 0);
+                                    pfdc->AddControlItem(11, 1, L"Check1");
+                                    pfdc->AddControlItem(11, 2, L"Check2");
+                                    pfdc->SetControlItemText(11, 1, L"SetCheck1");
+                                    pfdc->SetControlItemText(11, 2, L"SetCheck2");
+                                    pfdc->AddComboBox(12);
+                                    pfdc->AddControlItem(12, 1, L"Combo1");
+                                    pfdc->AddControlItem(12, 2, L"Combo2");
+                                    pfdc->SetControlItemText(12, 1, L"SetCombo1");
+                                    pfdc->SetControlItemText(12, 2, L"SetCombo2");
+                                    pfdc->AddEditBox(13, L"AddEditBox");
+                                    pfdc->EndVisualGroup();
+                                    hr = pfdc->StartVisualGroup(CONTROL_GROUP+1, L"Sample Group2");
+                                    pfdc->AddControlItem(13, 1, L"Edit1");
+                                    pfdc->AddControlItem(13, 2, L"Edit2");
+                                    pfdc->SetControlItemText(13, 1, L"SetEdit1");
+                                    pfdc->SetControlItemText(13, 2, L"SetEdit2");
+                                    pfdc->AddPushButton(14, L"AddPushButton");
+                                    pfdc->AddControlItem(14, 1, L"Button1");
+                                    pfdc->AddControlItem(14, 2, L"Button2");
+                                    pfdc->SetControlItemText(14, 1, L"SetButton1");
+                                    pfdc->SetControlItemText(14, 2, L"SetButton2");
+                                    pfdc->AddRadioButtonList(5);
+                                    pfdc->AddControlItem(5, 1, L"Radio1");
+                                    pfdc->AddControlItem(5, 2, L"Radio2");
+                                    pfdc->SetControlItemText(5, 1, L"SetRadio1");
+                                    pfdc->SetControlItemText(5, 2, L"SetRadio2");
+                                    pfdc->AddSeparator(6);
+                                    pfdc->AddText(7, L"AddText");
+                                    pfdc->AddControlItem(7, 1, L"Static1");
+                                    pfdc->AddControlItem(7, 2, L"Static2");
+                                    pfdc->SetControlItemText(7, 1, L"SetStatic1");
+                                    pfdc->SetControlItemText(7, 2, L"SetStatic2");
+                                    // make combobox prominent
+                                    pfdc->MakeProminent(13);
                                 }
                             }
                         }
@@ -587,15 +625,25 @@ HRESULT SetDefaultValuesForProperties()
                                     hr = pps->SetValue(PKEY_Keywords, propvarValue);
                                     if (SUCCEEDED(hr))
                                     {
-                                        // Commit does the actual writing back to the in memory store.
-                                        hr = pps->Commit();
+                                        PropVariantClear(&propvarValue);
+                                        hr = InitPropVariantFromUInt32(80, &propvarValue);
                                         if (SUCCEEDED(hr))
                                         {
-                                            // Hand these properties to the File Dialog.
-                                            hr = pfsd->SetCollectedProperties(NULL, TRUE);
+                                            // Set the value to the property store of the item.
+                                            hr = pps->SetValue(PKEY_Rating, propvarValue);
                                             if (SUCCEEDED(hr))
                                             {
-                                                hr = pfsd->SetProperties(pps);
+                                                // Commit does the actual writing back to the in memory store.
+                                                hr = pps->Commit();
+                                                if (SUCCEEDED(hr))
+                                                {
+                                                    // Hand these properties to the File Dialog.
+                                                    hr = pfsd->SetCollectedProperties(NULL, TRUE);
+                                                    if (SUCCEEDED(hr))
+                                                    {
+                                                        hr = pfsd->SetProperties(pps);
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -603,6 +651,52 @@ HRESULT SetDefaultValuesForProperties()
                                 }
                                 pps->Release();
                             }
+                        }
+                    }
+                }
+
+                // Set up a Customization.
+                IFileDialogCustomize* pfdc = NULL;
+                hr = pfsd->QueryInterface(IID_PPV_ARGS(&pfdc));
+                if (SUCCEEDED(hr))
+                {
+                    // Create a Visual Group.
+                    hr = pfdc->StartVisualGroup(CONTROL_GROUP, L"Sample Group");
+                    if (SUCCEEDED(hr))
+                    {
+                        // Add a radio-button list.
+                        hr = pfdc->AddRadioButtonList(CONTROL_RADIOBUTTONLIST);
+                        if (SUCCEEDED(hr))
+                        {
+                            // Set the state of the added radio-button list.
+                            hr = pfdc->SetControlState(CONTROL_RADIOBUTTONLIST, CDCS_VISIBLE | CDCS_ENABLED);
+                            if (SUCCEEDED(hr))
+                            {
+                                // Add individual buttons to the radio-button list.
+                                hr = pfdc->AddControlItem(CONTROL_RADIOBUTTONLIST,
+                                    CONTROL_RADIOBUTTON1,
+                                    L"Change Title to Longhorn");
+                                if (SUCCEEDED(hr))
+                                {
+                                    hr = pfdc->AddControlItem(CONTROL_RADIOBUTTONLIST,
+                                        CONTROL_RADIOBUTTON2,
+                                        L"Change Title to Vista");
+                                    if (SUCCEEDED(hr))
+                                    {
+                                        // Set the default selection to option 1.
+                                        hr = pfdc->SetSelectedControlItem(CONTROL_RADIOBUTTONLIST,
+                                            CONTROL_RADIOBUTTON1);
+                                    }
+                                }
+                            }
+
+
+                            pfdc->AddCheckButton(11, L"AddCheckButton", 0);
+                            pfdc->AddControlItem(11, 1, L"Check1");
+                            pfdc->AddControlItem(11, 2, L"Check2");
+
+                            // make combobox prominent
+                            pfdc->MakeProminent(11);
                         }
                     }
                 }

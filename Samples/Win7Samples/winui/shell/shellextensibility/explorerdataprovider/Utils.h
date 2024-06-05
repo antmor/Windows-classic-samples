@@ -27,6 +27,9 @@ extern HINSTANCE g_hInst;
 
 void DllAddRef();
 void DllRelease();
-
+STDAPI DllRegisterServer();
+STDAPI DllUnregisterServer();
+STDAPI DllCanUnloadNow();
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv);
 
 #define MAX_OBJS    10

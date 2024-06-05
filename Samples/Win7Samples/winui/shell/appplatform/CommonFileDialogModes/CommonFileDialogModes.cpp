@@ -145,12 +145,12 @@ HRESULT GetIDListName(IShellItem *psi, PWSTR *ppsz)
     CItemIterator itemIterator(psi);
     while (itemIterator.MoveNext())
     {
-        IShellItem2 *psi;
-        hr = itemIterator.GetCurrent(IID_PPV_ARGS(&psi));
+        IShellItem2 *currentPsi;
+        hr = itemIterator.GetCurrent(IID_PPV_ARGS(&currentPsi));
         if (SUCCEEDED(hr))
         {
             PWSTR pszName;
-            hr = psi->GetDisplayName(SIGDN_PARENTRELATIVE, &pszName);
+            hr = currentPsi->GetDisplayName(SIGDN_PARENTRELATIVE, &pszName);
             if (SUCCEEDED(hr))
             {
                 // Ignore errors, this is for debugging only
@@ -159,7 +159,7 @@ HRESULT GetIDListName(IShellItem *psi, PWSTR *ppsz)
                 StringCchCatEx(pszOutput, cchOutput, L"]", &pszOutput, &cchOutput, 0);
                 CoTaskMemFree(pszName);
             }
-            psi->Release();
+            currentPsi->Release();
         }
     }
 
@@ -625,11 +625,11 @@ void PickFilesAndFolders()
             else
             {
                 // pre Win7 we need to add a 3rd button, ugly but workable
-                IFileDialogCustomize *pfdc;
-                if (SUCCEEDED(pfd->QueryInterface(&pfdc)))
+                IFileDialogCustomize *pfdc2;
+                if (SUCCEEDED(pfd->QueryInterface(&pfdc2)))
                 {
-                    pfdc->AddPushButton(c_idDone, L"Done");
-                    pfdc->Release();
+                    pfdc2->AddPushButton(c_idDone, L"Done");
+                    pfdc2->Release();
                 }
             }
 

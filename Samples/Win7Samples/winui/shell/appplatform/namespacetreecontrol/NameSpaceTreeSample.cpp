@@ -35,7 +35,7 @@ HRESULT SetItemImageImageInStaticControl(HWND hwndStatic, IShellItem *psi)
             RECT rc;
             GetWindowRect(hwndStatic, &rc);
             UINT dxdy = min(rc.right - rc.left, rc.bottom - rc.top);    // make it square
-            SIZE size = { dxdy, dxdy };
+            SIZE size = { (LONG)dxdy, (LONG)dxdy };
 
             hr = psiif->GetImage(size, SIIGBF_RESIZETOFIT, &hbmp);
             psiif->Release();
